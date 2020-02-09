@@ -1,1 +1,124 @@
+/*
+	Luke Kim - 1478875
+	COSC 3360: Fundamentals of Operating Systems – Assignment 1
+	Due: February 3, 2020
 
+	This program will simulate the execution of processes of a tablet with a
+	multi-core processing unit, one solid-state drive, one display, and a large memory.
+	The program will take in file inputs full of processes and output the total simulation time,
+	number of processes completed, total number of SSD accesses, average number of busy cores,
+	and the SSD utilization (fraction of time that the device was busy).
+*/
+
+#include <iostream>
+#include <string>
+#include <fstream>
+#include <queue>
+using namespace std;
+
+struct node {
+	node* next;
+	node* down;
+	string start;
+	int data;
+};
+
+// A linked list that will store nodes that contain the process (word) and time (value)
+class eventList {
+private:
+	node* head;
+	node* rear;
+
+public:
+	eventList() {
+		head = rear = nullptr;
+	}
+
+	void startSimulation(int &time, queue<node*> &interactQueue, queue<node*> &nonInteractQueue) {
+		node* cu = head;
+		while (cu != nullptr) {
+			node* bottom = cu;
+
+			while (bottom != nullptr) {
+					xde
+				bottom = bottom->down;
+			}
+			cu = cu->next;
+		}
+	}
+
+	void requestCore() {
+
+	}
+
+	void storeEntry(string word, int value) {
+		node* temp = new node;
+		temp->start = word;
+		temp->data = value;
+		temp->next = nullptr;
+		temp->down = nullptr;
+
+		if (head == nullptr) {
+			head = rear = temp;
+			return;
+		}
+
+		if (word == "START") {
+			rear->next = temp;
+			rear = temp;
+		}
+
+		else {
+			node* bottom = rear;
+			while (bottom->down != nullptr) {
+				bottom = bottom->down;
+			}
+			bottom->down = temp;
+		}
+	}
+
+	void printList() {
+		node* cu = head;
+		while (cu != nullptr) {
+			node* bottom = cu;
+			while (bottom != nullptr) {
+				cout << bottom->start << " " << bottom->data << endl;
+				bottom = bottom->down;
+			}
+			cu = cu->next;
+		}
+	}
+
+};
+
+int main() {
+
+	string word;
+	int value, numCores;
+	int time = 0;
+	eventList myList;
+
+	ifstream inFile;
+	inFile.open("myinput2.txt");
+	while (inFile >> word >> value) {
+		if (word == "NCORES") {
+			numCores = value;
+		}
+
+		else {
+			myList.storeEntry(word, value);
+		}		
+	}
+
+	queue<node*> interactQueue;
+	queue<node*> nonInteractQueue;
+
+	myList.startSimulation(time, interactQueue, nonInteractQueue);
+	
+	//cout << "Number of cores: " << numCores << endl;
+	//myList.printList();
+
+	inFile.close();
+	system("pause");
+	return 0;
+}
