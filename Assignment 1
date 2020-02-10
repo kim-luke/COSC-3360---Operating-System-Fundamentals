@@ -1,7 +1,7 @@
 /*
 	Luke Kim - 1478875
 	COSC 3360: Fundamentals of Operating Systems – Assignment 1
-	Due: February 3, 2020
+	Due: February 12, 2020
 
 	This program will simulate the execution of processes of a tablet with a
 	multi-core processing unit, one solid-state drive, one display, and a large memory.
@@ -21,6 +21,7 @@ struct node {
 	node* down;
 	string start;
 	int data;
+	int processID;
 };
 
 // A linked list that will store nodes that contain the process (word) and time (value)
@@ -34,21 +35,8 @@ public:
 		head = rear = nullptr;
 	}
 
-	void startSimulation(int &time, queue<node*> &interactQueue, queue<node*> &nonInteractQueue) {
-		node* cu = head;
-		while (cu != nullptr) {
-			node* bottom = cu;
-
-			while (bottom != nullptr) {
-					xde
-				bottom = bottom->down;
-			}
-			cu = cu->next;
-		}
-	}
-
-	void requestCore() {
-
+	node* getHead() {
+		return head;
 	}
 
 	void storeEntry(string word, int value) {
@@ -89,14 +77,62 @@ public:
 		}
 	}
 
+	void sortList(queue<node*> &sortQueue) {
+		node* cu = head;
+		while (cu != nullptr) {
+			node* bottom = cu;
+			if (cu->start == "START") {
+				sortQueue.push(cu);
+			}
+
+			while (bottom != nullptr) {		
+				bottom = bottom->down;
+			}
+			cu = cu->next;
+		}
+	}
+
+	void assignProcessID() {
+		node* cu = head;
+		int storePID = 0;
+
+		while (cu != nullptr) {
+			node* bottom = cu;
+			
+			while (bottom != nullptr) {
+
+				if (bottom->start != "PID") {
+					bottom = bottom->down;			
+				}
+
+				else {
+					storePID = cu->data;
+					cu->processID = storePID;
+					bottom = bottom->down;
+				}
+			}
+			cu = cu->next;
+		}
+	}
 };
+
+void showQueue(queue<node*> sortQueue)
+{
+	queue<node*> popQueue = sortQueue;
+	while (!popQueue.empty())
+	{
+		cout << popQueue.front()->start << " " << popQueue.front()->data << " " << popQueue.front()->processID << " ";
+		popQueue.pop();
+	}
+	cout << endl;
+}
 
 int main() {
 
 	string word;
 	int value, numCores;
 	int time = 0;
-	eventList myList;
+	eventList eventTable;
 
 	ifstream inFile;
 	inFile.open("myinput2.txt");
@@ -106,17 +142,18 @@ int main() {
 		}
 
 		else {
-			myList.storeEntry(word, value);
+			eventTable.storeEntry(word, value);
 		}		
 	}
 
+	queue<node*> sortQueue;
 	queue<node*> interactQueue;
 	queue<node*> nonInteractQueue;
-
-	myList.startSimulation(time, interactQueue, nonInteractQueue);
 	
-	//cout << "Number of cores: " << numCores << endl;
-	//myList.printList();
+	eventTable.printList();
+	eventTable.sortList(sortQueue);
+	eventTable.assignProcessID();
+	showQueue(sortQueue);
 
 	inFile.close();
 	system("pause");
