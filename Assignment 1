@@ -24,7 +24,6 @@ struct node {
 	int processID;
 };
 
-// A linked list that will store nodes that contain the process (word) and time (value)
 class eventList {
 private:
 	node* head;
@@ -39,23 +38,29 @@ public:
 		return head;
 	}
 
+	// Reads in a string and an int value from the file one line at a time and stores in nodes
 	void storeEntry(string word, int value) {
+		
+		// Creates a new node, settings its next and down connections to null
+		// Also sets its start and data value to the string and int value passed in
 		node* temp = new node;
 		temp->start = word;
 		temp->data = value;
 		temp->next = nullptr;
 		temp->down = nullptr;
-
+		
 		if (head == nullptr) {
 			head = rear = temp;
 			return;
 		}
 
+		// When the string passed in is START, we will traverse the linked list to the right rather than down
 		if (word == "START") {
 			rear->next = temp;
 			rear = temp;
 		}
-
+		
+		// Otherwise create a node that moves downward, creating a 2D list
 		else {
 			node* bottom = rear;
 			while (bottom->down != nullptr) {
@@ -77,6 +82,7 @@ public:
 		}
 	}
 
+	// Adds all nodes that don't contain the word PID
 	void sortList(queue<node*> &sortQueue) {
 		node* cu = head;
 		while (cu != nullptr) {
@@ -97,6 +103,7 @@ public:
 		}
 	}
 
+	// Assigns ProcessIDs for all nodes in order to differentiate and sort them later
 	void assignProcessID() {
 		node* cu = head;
 		int storePID = 0;
@@ -138,7 +145,7 @@ void showQueue(queue<node*> sortQueue)
 	cout << endl;
 }
 
-void startSimulation(eventList eventTable, queue<node*> sortQueue) {
+void startSimulation(eventList eventTable, queue<node*> sortQueue, queue<node*> interactQueue, queue<node*> nonInteractQueue) {
 	eventTable.printList();
 	eventTable.sortList(sortQueue);
 	eventTable.assignProcessID();
@@ -168,7 +175,7 @@ int main() {
 	queue<node*> interactQueue;
 	queue<node*> nonInteractQueue;
 
-	startSimulation(eventTable, sortQueue);
+	startSimulation(eventTable, sortQueue, interactQueue, nonInteractQueue);
 
 	inFile.close();
 	system("pause");
