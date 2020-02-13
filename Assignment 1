@@ -92,39 +92,36 @@ public:
 				else {
 					bottom = bottom->down;
 				}
-			}		
+			}
 			cu = cu->next;
 		}
 	}
-
 
 	void assignProcessID() {
 		node* cu = head;
 		int storePID = 0;
 
 		while (cu != nullptr) {
-			node* bottom = cu;
-
-			if (cu->start != "PID") {
-				cu->processID = cu->down->data;
-			}
+			node *bottom = cu;
 
 			while (bottom != nullptr) {
 
-				if (bottom->start != "PID") {
+				if (bottom->start == "START") {
+					bottom->processID = bottom->down->data;
+					bottom = bottom->down;
+				}
+
+				else if (bottom->start == "PID") {
+					storePID = bottom->data;
 					bottom = bottom->down;
 				}
 
 				else {
-					storePID = cu->data;
-
-					if (bottom->start != "START") {
-						bottom->processID = storePID;
-					}
-
+					bottom->processID = storePID;
 					bottom = bottom->down;
 				}
 			}
+
 			cu = cu->next;
 		}
 	}
@@ -172,7 +169,7 @@ int main() {
 	queue<node*> nonInteractQueue;
 
 	startSimulation(eventTable, sortQueue);
-	
+
 	inFile.close();
 	system("pause");
 	return 0;
