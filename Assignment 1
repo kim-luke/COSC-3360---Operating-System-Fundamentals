@@ -1,7 +1,7 @@
 /*
 	Luke Kim - 1478875
 	COSC 3360: Fundamentals of Operating Systems – Assignment 1
-	Due: February 12, 2020
+	Due: February 12, 2020 (extended to the 19th)
 
 	This program will simulate the execution of processes of a tablet with a
 	multi-core processing unit, one solid-state drive, one display, and a large memory.
@@ -81,16 +81,22 @@ public:
 		node* cu = head;
 		while (cu != nullptr) {
 			node* bottom = cu;
-			if (cu->start == "START") {
-				sortQueue.push(cu);
-			}
 
-			while (bottom != nullptr) {		
-				bottom = bottom->down;
-			}
+			while (bottom != nullptr) {
+
+				if (bottom->start != "PID") {
+					sortQueue.push(bottom);
+					bottom = bottom->down;
+				}
+
+				else {
+					bottom = bottom->down;
+				}
+			}		
 			cu = cu->next;
 		}
 	}
+
 
 	void assignProcessID() {
 		node* cu = head;
@@ -98,16 +104,24 @@ public:
 
 		while (cu != nullptr) {
 			node* bottom = cu;
-			
+
+			if (cu->start != "PID") {
+				cu->processID = cu->down->data;
+			}
+
 			while (bottom != nullptr) {
 
 				if (bottom->start != "PID") {
-					bottom = bottom->down;			
+					bottom = bottom->down;
 				}
 
 				else {
 					storePID = cu->data;
-					cu->processID = storePID;
+
+					if (bottom->start != "START") {
+						bottom->processID = storePID;
+					}
+
 					bottom = bottom->down;
 				}
 			}
@@ -127,6 +141,13 @@ void showQueue(queue<node*> sortQueue)
 	cout << endl;
 }
 
+void startSimulation(eventList eventTable, queue<node*> sortQueue) {
+	eventTable.printList();
+	eventTable.sortList(sortQueue);
+	eventTable.assignProcessID();
+	showQueue(sortQueue);
+}
+
 int main() {
 
 	string word;
@@ -143,18 +164,15 @@ int main() {
 
 		else {
 			eventTable.storeEntry(word, value);
-		}		
+		}
 	}
 
 	queue<node*> sortQueue;
 	queue<node*> interactQueue;
 	queue<node*> nonInteractQueue;
-	
-	eventTable.printList();
-	eventTable.sortList(sortQueue);
-	eventTable.assignProcessID();
-	showQueue(sortQueue);
 
+	startSimulation(eventTable, sortQueue);
+	
 	inFile.close();
 	system("pause");
 	return 0;
