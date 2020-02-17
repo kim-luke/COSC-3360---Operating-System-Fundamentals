@@ -24,7 +24,6 @@ struct node {
 	int processID;
 };
 
-// A linked list that will store nodes that contain the process (word) and time (value)
 class eventList {
 private:
 	node* head;
@@ -39,23 +38,29 @@ public:
 		return head;
 	}
 
+	// Reads in a string and an int value from the file one line at a time and stores in nodes
 	void storeEntry(string word, int value) {
+		
+		// Creates a new node, settings its next and down connections to null
+		// Also sets its start and data value to the string and int value passed in
 		node* temp = new node;
 		temp->start = word;
 		temp->data = value;
 		temp->next = nullptr;
 		temp->down = nullptr;
-
+		
 		if (head == nullptr) {
 			head = rear = temp;
 			return;
 		}
 
+		// When the string passed in is START, we will traverse the linked list to the right rather than down
 		if (word == "START") {
 			rear->next = temp;
 			rear = temp;
 		}
-
+		
+		// Otherwise create a node that moves downward, creating a 2D list
 		else {
 			node* bottom = rear;
 			while (bottom->down != nullptr) {
@@ -77,7 +82,8 @@ public:
 		}
 	}
 
-	void sortList(queue<node*> &sortQueue) {
+	// Sorts all nodes that don't contain the word PID
+	void filterList(queue<node*> &filteredQueue) {
 		node* cu = head;
 		while (cu != nullptr) {
 			node* bottom = cu;
@@ -85,7 +91,7 @@ public:
 			while (bottom != nullptr) {
 
 				if (bottom->start != "PID") {
-					sortQueue.push(bottom);
+					filteredQueue.push(bottom);
 					bottom = bottom->down;
 				}
 
@@ -97,6 +103,7 @@ public:
 		}
 	}
 
+	// Assigns ProcessIDs for all nodes in order to differentiate and sort them later
 	void assignProcessID() {
 		node* cu = head;
 		int storePID = 0;
@@ -125,11 +132,36 @@ public:
 			cu = cu->next;
 		}
 	}
+
+	void queueAssign(queue<node*> &filteredQueue, queue<node*> &sortQueue, int &time) {
+		queue<node*> tempQueue = filteredQueue;
+		int cuTime = 0;
+		cuTime = time;
+		int tempTime = 0;
+
+		while (!tempQueue.empty()) {
+			if (tempQueue.front()->start == "START") {
+				cuTime = tempQueue.front()->data;
+				cout << "current time: " << cuTime << endl;
+				sortQueue.push(tempQueue.front());
+			}		
+
+			else if (tempQueue.front()->start == "CORE" && tempQueue.front()->data >= cuTime) {
+				tempTime += tempQueue.front()->data;
+				sortQueue.push(tempQueue.front());
+			}
+
+			tempQueue.pop();
+			cout << "not empty yet" << endl;
+		}
+		cout << "current time is: " << cuTime << endl;
+		cout << "empty now" << endl;
+	}
 };
 
-void showQueue(queue<node*> sortQueue)
+void showQueue(queue<node*> printQueue)
 {
-	queue<node*> popQueue = sortQueue;
+	queue<node*> popQueue = printQueue;
 	while (!popQueue.empty())
 	{
 		cout << popQueue.front()->start << " " << popQueue.front()->data << " " << popQueue.front()->processID << " ";
@@ -138,10 +170,12 @@ void showQueue(queue<node*> sortQueue)
 	cout << endl;
 }
 
-void startSimulation(eventList eventTable, queue<node*> sortQueue) {
+void startSimulation(eventList eventTable, queue<node*> filteredQueue, queue<node*> sortQueue, queue<node*> interactQueue, queue<node*> nonInteractQueue, int time) {
 	eventTable.printList();
-	eventTable.sortList(sortQueue);
+	eventTable.filterList(filteredQueue);
 	eventTable.assignProcessID();
+	showQueue(filteredQueue);
+	eventTable.queueAssign(filteredQueue, sortQueue, time);
 	showQueue(sortQueue);
 }
 
@@ -164,11 +198,12 @@ int main() {
 		}
 	}
 
+	queue<node*> filteredQueue;
 	queue<node*> sortQueue;
 	queue<node*> interactQueue;
 	queue<node*> nonInteractQueue;
 
-	startSimulation(eventTable, sortQueue);
+	startSimulation(eventTable, filteredQueue, sortQueue, interactQueue, nonInteractQueue, time);
 
 	inFile.close();
 	system("pause");
