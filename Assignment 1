@@ -22,6 +22,7 @@ struct node {
 	string start;
 	int data;
 	int processID;
+	int endTime;
 };
 
 class eventList {
@@ -48,6 +49,7 @@ public:
 		temp->data = value;
 		temp->next = nullptr;
 		temp->down = nullptr;
+		temp->endTime = 0;
 		
 		if (head == nullptr) {
 			head = rear = temp;
@@ -82,7 +84,7 @@ public:
 		}
 	}
 
-	// Sorts all nodes that don't contain the word PID
+	// Filters all nodes that contain the word PID
 	void filterList(queue<node*> &filteredQueue) {
 		node* cu = head;
 		while (cu != nullptr) {
@@ -135,20 +137,20 @@ public:
 
 	void queueAssign(queue<node*> &filteredQueue, queue<node*> &sortQueue, int &time) {
 		queue<node*> tempQueue = filteredQueue;
+		int processEndTime = 0;
 		int cuTime = 0;
-		cuTime = time;
-		int tempTime = 0;
 
 		while (!tempQueue.empty()) {
+
 			if (tempQueue.front()->start == "START") {
 				cuTime = tempQueue.front()->data;
-				cout << "current time: " << cuTime << endl;
 				sortQueue.push(tempQueue.front());
-			}		
+			}
 
-			else if (tempQueue.front()->start == "CORE" && tempQueue.front()->data >= cuTime) {
-				tempTime += tempQueue.front()->data;
+			else if (tempQueue.front()->start == "CORE") {
+				processEndTime += tempQueue.front()->data;
 				sortQueue.push(tempQueue.front());
+				cout << "the process end time is: " << processEndTime << endl;
 			}
 
 			tempQueue.pop();
@@ -189,6 +191,7 @@ int main() {
 	ifstream inFile;
 	inFile.open("myinput2.txt");
 	while (inFile >> word >> value) {
+
 		if (word == "NCORES") {
 			numCores = value;
 		}
@@ -199,6 +202,7 @@ int main() {
 	}
 
 	queue<node*> filteredQueue;
+	queue<node*> timedQueue;
 	queue<node*> sortQueue;
 	queue<node*> interactQueue;
 	queue<node*> nonInteractQueue;
