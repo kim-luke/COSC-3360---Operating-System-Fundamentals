@@ -17,199 +17,387 @@
 using namespace std;
 
 struct node {
+	int startTime;
+	int time_taken;
+	int PID; 
+	int time_completed; 
+	bool isInteractive;
+	string request; 
+	string state;
 	node* next;
 	node* down;
-	string start;
-	int data;
-	int processID;
-	int endTime;
 };
 
-class eventList {
+class listOfList {
 private:
 	node* head;
 	node* rear;
 
 public:
-	eventList() {
-		head = rear = nullptr;
+	listOfList() {
+		head = rear = 0;
 	}
 
-	node* getHead() {
-		return head;
+	node* returnHead() { 
+		return head; 
 	}
 
-	// Reads in a string and an int value from the file one line at a time and stores in nodes
-	void storeEntry(string word, int value) {
-		
-		// Creates a new node, settings its next and down connections to null
-		// Also sets its start and data value to the string and int value passed in
-		node* temp = new node;
-		temp->start = word;
-		temp->data = value;
-		temp->next = nullptr;
-		temp->down = nullptr;
-		temp->endTime = 0;
-		
-		if (head == nullptr) {
-			head = rear = temp;
+	void addNode(string word, int val, int pid, int startTime) {
+		node* nodeToAdd = new node;
+		nodeToAdd->request = word;
+		nodeToAdd->time_taken = val;
+		nodeToAdd->PID = pid;
+		nodeToAdd->startTime = startTime;
+		nodeToAdd->next = 0;
+		nodeToAdd->down = 0;
+
+		if (head == 0) {
+			head = rear = nodeToAdd;
 			return;
 		}
 
-		// When the string passed in is START, we will traverse the linked list to the right rather than down
 		if (word == "START") {
-			rear->next = temp;
-			rear = temp;
+			rear->next = nodeToAdd;
+			rear = nodeToAdd;
 		}
-		
-		// Otherwise create a node that moves downward, creating a 2D list
+
 		else {
-			node* bottom = rear;
-			while (bottom->down != nullptr) {
-				bottom = bottom->down;
+
+			if (word == "CORE") {
+				nodeToAdd->state = "ARRIVAL";
 			}
-			bottom->down = temp;
+
+			node* cuBottom = rear;
+
+			while (cuBottom->down != 0) {
+				cuBottom = cuBottom->down;
+			}
+
+			cuBottom->down = nodeToAdd;
 		}
 	}
 
 	void printList() {
 		node* cu = head;
-		while (cu != nullptr) {
-			node* bottom = cu;
-			while (bottom != nullptr) {
-				cout << bottom->start << " " << bottom->data << endl;
-				bottom = bottom->down;
-			}
-			cu = cu->next;
-		}
-	}
+		while (cu != 0) {
+			node* cuDown = cu;
 
-	// Filters all nodes that contain the word PID
-	void filterList(queue<node*> &filteredQueue) {
-		node* cu = head;
-		while (cu != nullptr) {
-			node* bottom = cu;
-
-			while (bottom != nullptr) {
-
-				if (bottom->start != "PID") {
-					filteredQueue.push(bottom);
-					bottom = bottom->down;
-				}
-
-				else {
-					bottom = bottom->down;
-				}
-			}
-			cu = cu->next;
-		}
-	}
-
-	// Assigns ProcessIDs for all nodes in order to differentiate and sort them later
-	void assignProcessID() {
-		node* cu = head;
-		int storePID = 0;
-
-		while (cu != nullptr) {
-			node *bottom = cu;
-
-			while (bottom != nullptr) {
-
-				if (bottom->start == "START") {
-					bottom->processID = bottom->down->data;
-					bottom = bottom->down;
-				}
-
-				else if (bottom->start == "PID") {
-					storePID = bottom->data;
-					bottom = bottom->down;
-				}
-
-				else {
-					bottom->processID = storePID;
-					bottom = bottom->down;
-				}
+			while (cuDown != 0) {
+				cout << cuDown->PID << " " << cuDown->request << "  " << cuDown->time_taken << endl;
+				cuDown = cuDown->down;
 			}
 
 			cu = cu->next;
 		}
 	}
 
-	void queueAssign(queue<node*> &filteredQueue, queue<node*> &sortQueue, int &time) {
-		queue<node*> tempQueue = filteredQueue;
-		int processEndTime = 0;
-		int cuTime = 0;
-
-		while (!tempQueue.empty()) {
-
-			if (tempQueue.front()->start == "START") {
-				cuTime = tempQueue.front()->data;
-				sortQueue.push(tempQueue.front());
-			}
-
-			else if (tempQueue.front()->start == "CORE") {
-				processEndTime += tempQueue.front()->data;
-				sortQueue.push(tempQueue.front());
-				cout << "the process end time is: " << processEndTime << endl;
-			}
-
-			tempQueue.pop();
-			cout << "not empty yet" << endl;
-		}
-		cout << "current time is: " << cuTime << endl;
-		cout << "empty now" << endl;
-	}
 };
 
-void showQueue(queue<node*> printQueue)
-{
-	queue<node*> popQueue = printQueue;
-	while (!popQueue.empty())
-	{
-		cout << popQueue.front()->start << " " << popQueue.front()->data << " " << popQueue.front()->processID << " ";
-		popQueue.pop();
+int numOfProcesses = 0;
+int initialStartTime = 0;
+int freeCores = 0;
+int ssdCount = 0;
+bool coresBusy = false;
+int totalTime = 0;
+bool ssdFree = true;
+
+queue<node*> iqueue;
+queue<node*> niqueue;
+queue<node*> ssdQueue;
+queue<node*> scheduleQueue;
+vector<node*> ttyQueue;
+
+void scheduleProcesses(listOfList &events);
+void showQueue(queue<node*> &);
+void startProcessing();
+void core_request(node*&, bool isInt);
+void core_release(node*&);
+void ssd_request(node*&);
+void ssd_release(node*&, bool &);
+void tty_request(node*&);
+void tty_release();
+
+void showQueue(queue<node*> &que) {
+	while (!que.empty()) {
+		node* temp = que.front();
+		que.pop();
+		cout << temp->request << " " << temp->time_taken << endl;
 	}
-	cout << endl;
 }
 
-void startSimulation(eventList eventTable, queue<node*> filteredQueue, queue<node*> sortQueue, queue<node*> interactQueue, queue<node*> nonInteractQueue, int time) {
-	eventTable.printList();
-	eventTable.filterList(filteredQueue);
-	eventTable.assignProcessID();
-	showQueue(filteredQueue);
-	eventTable.queueAssign(filteredQueue, sortQueue, time);
-	showQueue(sortQueue);
+void scheduleProcesses(listOfList &events) {
+	node* cuHead = events.returnHead();
+
+	while (cuHead != 0) {
+		cuHead->PID = cuHead->down->PID;
+		scheduleQueue.push(cuHead);
+		cuHead = cuHead->next;
+	}
+
+	startProcessing();
+}
+
+void startProcessing() {
+	node* tempEvent;
+	node* poppedEvent;
+	while (!scheduleQueue.empty()) {
+		poppedEvent = scheduleQueue.front();
+		if (poppedEvent->request == "START") {
+			cout << poppedEvent->PID << " | " << poppedEvent->request << " | " << poppedEvent->time_taken << " SCHEDULED" << endl;
+		}
+
+		else {
+			cout << "Popped event: " << poppedEvent->PID << " | " << poppedEvent->request << " | " << poppedEvent->time_taken << endl;
+		}
+
+		if (poppedEvent->request == "CORE") {
+			cout << "Process " << poppedEvent->PID << " requests CORE for " << poppedEvent->time_taken << " ms" << endl;
+			tempEvent = poppedEvent;
+			core_release(poppedEvent);
+			core_request(poppedEvent, poppedEvent->isInteractive);
+			if (poppedEvent->PID != tempEvent->PID) {
+				cout << "tempEvent and poppedEvent is DIFFERENT" << endl;
+				cout << "TEMP: " << tempEvent->PID << " | " << tempEvent->request << " | " << tempEvent->time_taken << endl;
+				cout << "POPPED: " << poppedEvent->PID << " | " << poppedEvent->request << " | " << poppedEvent->time_taken << endl;
+				core_request(tempEvent, tempEvent->isInteractive);
+			}
+		}
+
+		else if (poppedEvent->request == "SSD") {
+			tempEvent = poppedEvent;
+			ssd_release(poppedEvent, poppedEvent->down->isInteractive);
+
+			if (tempEvent != poppedEvent) {
+				ssd_request(tempEvent);
+			}
+
+			cout << "Process " << poppedEvent->PID << " requests SSD for " << poppedEvent->time_taken << " ms" << endl;
+			ssd_request(poppedEvent);
+		}
+
+		else if (poppedEvent->request == "TTY") {
+			tty_release();
+			tty_request(poppedEvent);
+			scheduleQueue.pop();
+			continue;
+		}
+
+		scheduleQueue.pop();
+
+		if (poppedEvent->state != "READY" && poppedEvent->down != NULL) {
+			cout << "Process " << poppedEvent->down->PID << ": " << poppedEvent->down->request << " | " << poppedEvent->down->time_taken << " pushed at the end of the SCHEDULE queue" << endl;
+			scheduleQueue.push(poppedEvent->down);
+		}
+
+		cout << '\n';
+	}
+	while (!iqueue.empty()) {
+		core_release(poppedEvent);
+		cout << "Process " << poppedEvent->PID << ": " << poppedEvent->request << " | " << poppedEvent->time_taken << " pushed at the end of the SCHEDULE queue" << endl;
+		scheduleQueue.push(poppedEvent);
+		cout << "Process Restarting" << endl;
+		startProcessing();
+	}
+
+	while (!niqueue.empty()) {
+		core_release(poppedEvent);
+		cout << "Process " << poppedEvent->PID << ": " << poppedEvent->request << " | " << poppedEvent->time_taken << " pushed at the end of the SCHEDULE queue" << endl;
+		scheduleQueue.push(poppedEvent);
+		cout << "Process Restarting" << endl;
+		startProcessing();
+	}
+
+	if (!ttyQueue.empty()) {
+		tty_release();
+	}
+}
+
+void core_request(node*& coreNode, bool isInt) {
+
+	coreNode->time_completed = totalTime + coreNode->time_taken;
+
+	if (freeCores > 0) {
+		coreNode->state = "RUNNING";
+		cout << "Process " << coreNode->PID << " state: " << coreNode->state << endl;
+		freeCores--;
+		cout << "Available cores: " << freeCores << endl;
+		totalTime += coreNode->time_taken;
+		cout << "Process " << coreNode->PID << " completes CORE request at " << totalTime << " ms" << endl;
+		cout << "Summary: " << endl;
+		cout << "Total time: " << totalTime << " ms" << endl;
+		cout << "Number of SSD accesses: " << ssdCount << endl;
+	}
+
+	else {
+		coresBusy = true;
+		coreNode->state = "READY";
+		cout << "CORE is BUSY " << endl;
+
+		if (isInt) {
+			cout << "Process " << coreNode->PID << " pushed to Interactive queue" << endl;
+			iqueue.push(coreNode);
+		}
+
+		else {
+			cout << "Process " << coreNode->PID << " pushed to non-Interactive queue" << endl;
+			niqueue.push(coreNode);
+		}
+
+		cout << "Process " << coreNode->PID << " state: " << coreNode->state << endl;
+	}
+}
+
+void core_release(node*& processToPop) {
+
+	if (!iqueue.empty()) {
+		processToPop = iqueue.front();
+		cout << "Process " << processToPop->PID << " wants CORE at " << totalTime << " ms for " << processToPop->time_taken << " ms from IQ" << endl;
+		iqueue.pop();
+		freeCores++;
+	}
+
+	else if (!niqueue.empty()) {
+		processToPop = niqueue.front();
+		cout << "Process " << processToPop->PID << " wants CORE at " << totalTime << " ms for " << processToPop->time_taken << " ms from NIQ" << endl;
+		niqueue.pop();
+		freeCores++;
+	}
+
+	if (freeCores > 0) {
+		coresBusy = false;
+	}
+}
+
+void ssd_request(node*& ssdNode) {
+
+	ssdNode->state = "BLOCKED";
+	ssdNode->time_completed = totalTime + ssdNode->time_taken;
+
+	ssdCount++;
+
+	if (ssdFree) {
+		cout << "Process " << ssdNode->PID << " gets SSD for " << ssdNode->time_taken << " ms" << endl;
+		ssdFree = false;
+
+		if (!coresBusy && ttyQueue.empty()) {
+			totalTime += ssdNode->time_taken;
+			cout << "Total time: " << totalTime << endl;
+		}
+	}
+
+	else {
+		cout << "SSD is BUSY" << endl;
+		cout << "Process " << ssdNode->PID << " pushed to SSD queue" << endl;
+		ssdQueue.push(ssdNode);
+	}
+}
+
+void ssd_release(node*& ssdNode, bool &isInt) {
+	isInt = false;
+	if (!ssdQueue.empty()) {
+		ssdNode = ssdQueue.front();
+		ssdQueue.pop();
+		cout << "Process " << ssdNode->PID << " completes SSD request at " << ssdNode->time_completed << " ms" << endl;
+		scheduleQueue.push(ssdNode);
+		cout << "Process " << ssdNode->PID << ": " << ssdNode->request << " | " << ssdNode->time_taken << " pused to SCHEDULE queue " << endl;
+	}
+
+	else {
+		ssdFree = true;
+	}
+}
+
+void tty_request(node*& ttyNode) {
+	ttyNode->state = "BLOCKED";
+	ttyNode->startTime = totalTime;
+	ttyNode->time_completed = totalTime + ttyNode->time_taken;
+	ttyQueue.push_back(ttyNode);
+	cout << "Process " << ttyNode->PID << " will interact TTY for " << ttyNode->time_taken << " ms" << endl;
+	cout << "Process " << ttyNode->PID << " will complete TTY at time " << ttyNode->time_completed << " ms" << endl;
+	ttyNode->down->isInteractive = true;
+}
+
+void tty_release() {
+	for (int i = 0; i < ttyQueue.size(); i++) {
+		cout << "Checking process " << ttyQueue.at(i)->PID << " | " << ttyQueue.at(i)->request << " | " << ttyQueue.at(i)->time_taken << " ===> " << ttyQueue.at(i)->time_completed << endl;
+		if (totalTime >= ttyQueue.at(i)->time_completed) {
+			cout << "THIS DOES HAPPEN--------------------------------------------" << endl;
+			cout << "process: " << ttyQueue.at(i)->PID << " completed TTY request at time " << ttyQueue.at(i)->time_completed << endl;
+
+			if (!coresBusy) {
+				cout << "process: " << ttyQueue.at(i)->PID << " gets CORE for " << ttyQueue.at(i)->down->time_taken << endl;			
+			}
+
+			cout << "Process " << ttyQueue.at(i)->down->PID << ": " << ttyQueue.at(i)->down->request << " | " << ttyQueue.at(i)->down->time_taken << " pushed at the end of the SCHEDULE queue" << endl;
+
+			scheduleQueue.push(ttyQueue.at(i)->down);
+			ttyQueue.erase(ttyQueue.begin() + i);
+			startProcessing();
+		}
+	}
+
+	if (scheduleQueue.empty() && !ttyQueue.empty()) {
+		node* toRelease = ttyQueue.at(0);
+		int earliestTime = toRelease->startTime + toRelease->time_taken;
+		int indexToDelete = 0;
+
+		for (int i = 1; i < ttyQueue.size(); i++) {
+			if (ttyQueue.at(i)->startTime + ttyQueue.at(i)->time_taken < earliestTime) {
+				indexToDelete = i;
+				toRelease = ttyQueue.at(i);
+				earliestTime = toRelease->startTime + toRelease->time_taken;
+			}
+		}
+
+		totalTime = toRelease->time_completed;
+		cout << "Process " << toRelease->PID << " completed TTY request at " << toRelease->time_completed << " ms" << endl;
+		cout << "Process " << toRelease->down->PID << ": " << toRelease->down->request << " | " << toRelease->down->time_taken << " pushed at the end of the SCHEDULE queue" << endl;
+		scheduleQueue.push(toRelease->down);
+		ttyQueue.erase(ttyQueue.begin() + indexToDelete);
+		startProcessing();
+	}
 }
 
 int main() {
 
+	listOfList eventList;
+
+	int value;
 	string word;
-	int value, numCores;
-	int time = 0;
-	eventList eventTable;
+	int eventsPID = 0;
+	int eventsStartTime = 0;
 
 	ifstream inFile;
-	inFile.open("myinput2.txt");
+	inFile.open("input11.txt");
+
 	while (inFile >> word >> value) {
 
 		if (word == "NCORES") {
-			numCores = value;
+			freeCores = value;
+		}
+
+		else if (word == "PID") {
+			eventsPID = value;
 		}
 
 		else {
-			eventTable.storeEntry(word, value);
+			if (word == "START") {
+				eventsStartTime = value;
+
+				if (numOfProcesses == 0) {
+					initialStartTime = value;
+				}
+
+				numOfProcesses++;
+			}
+			eventList.addNode(word, value, eventsPID, eventsStartTime);
 		}
 	}
 
-	queue<node*> filteredQueue;
-	queue<node*> timedQueue;
-	queue<node*> sortQueue;
-	queue<node*> interactQueue;
-	queue<node*> nonInteractQueue;
+	totalTime += initialStartTime;
 
-	startSimulation(eventTable, filteredQueue, sortQueue, interactQueue, nonInteractQueue, time);
-
-	inFile.close();
+	node* beginningHead = eventList.returnHead();
+	scheduleProcesses(eventList);
 	system("pause");
 	return 0;
 }
