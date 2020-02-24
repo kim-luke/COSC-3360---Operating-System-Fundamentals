@@ -41,7 +41,7 @@ public:
 
 	// Reads in a string and an int value from the file one line at a time and stores in nodes
 	void storeEntry(string word, int value) {
-		
+
 		// Creates a new node, settings its next and down connections to null
 		// Also sets its start and data value to the string and int value passed in
 		node* temp = new node;
@@ -50,7 +50,7 @@ public:
 		temp->next = nullptr;
 		temp->down = nullptr;
 		temp->endTime = 0;
-		
+
 		if (head == nullptr) {
 			head = rear = temp;
 			return;
@@ -61,7 +61,7 @@ public:
 			rear->next = temp;
 			rear = temp;
 		}
-		
+
 		// Otherwise create a node that moves downward, creating a 2D list
 		else {
 			node* bottom = rear;
