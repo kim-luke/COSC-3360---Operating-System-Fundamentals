@@ -99,7 +99,9 @@ int freeCores = 0;
 int ssdCount = 0;
 bool coresBusy = false;
 int totalTime = 0;
+double ssdUtil = 0;
 bool ssdFree = true;
+int coreTime = 0;
 
 queue<node*> iqueue;
 queue<node*> niqueue;
@@ -222,10 +224,14 @@ void core_request(node*& coreNode, bool isInt) {
 		freeCores--;
 		cout << "Available cores: " << freeCores << endl;
 		totalTime += coreNode->time_taken;
+		coreTime += coreNode->time_taken;
 		cout << "Process " << coreNode->PID << " completes CORE request at " << totalTime << " ms" << endl;
 		cout << "Summary: " << endl;
 		cout << "Total time: " << totalTime << " ms" << endl;
 		cout << "Number of SSD accesses: " << ssdCount << endl;
+		cout << "Number of processes completed: " << numOfProcesses << endl;
+		cout << "Number of average busy cores: " << double(coreTime) / totalTime << endl;
+		cout << "The SSD utilization: " << double(ssdUtil) / totalTime << endl;
 	}
 
 	else {
@@ -277,6 +283,7 @@ void ssd_request(node*& ssdNode) {
 
 	if (ssdFree) {
 		cout << "Process " << ssdNode->PID << " gets SSD for " << ssdNode->time_taken << " ms" << endl;
+
 		ssdFree = false;
 
 		if (!coresBusy && ttyQueue.empty()) {
@@ -368,7 +375,7 @@ int main() {
 	int eventsStartTime = 0;
 
 	ifstream inFile;
-	inFile.open("input11.txt");
+	inFile.open("myinput2.txt");
 
 	while (inFile >> word >> value) {
 
