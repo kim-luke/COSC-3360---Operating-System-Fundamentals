@@ -1,0 +1,51 @@
+/*
+	Luke Kim - 1478875
+	COSC 3360: Fundamentals of Operating Systems – Assignment 2
+	Due: March 25, 2020 
+
+	This program will act as the server program, which will wait for requests
+	from the client program, and exchange one-line text messages to the
+	client program.
+*/
+
+#include <iostream>
+#include <string>
+#include <fstream>
+#include <stdio.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+using namespace std;
+
+struct node {
+	node* next;
+	string location;
+	int temperature;
+	string forecast;
+};
+
+class weatherTable {
+
+	private:
+		node* head;
+		node* rear;
+
+	printTable() {
+
+	}
+};
+
+int main(int argc, char *argv[]) {
+
+	string place;
+	int temp;
+	string weather;
+
+	ifstream inFile;
+	inFile.open("weather20.txt");
+	while (inFile >> location >> temperature >> weather) {
+
+	}
+
+	return 0;
+} 
