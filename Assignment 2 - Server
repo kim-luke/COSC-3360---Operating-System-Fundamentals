@@ -1,7 +1,7 @@
 /*
 	Luke Kim - 1478875
 	COSC 3360: Fundamentals of Operating Systems – Assignment 2
-	Due: March 25, 2020 
+	Due: March 25, 2020
 
 	This program will act as the server program, which will wait for requests
 	from the client program, and exchange one-line text messages to the
@@ -11,10 +11,11 @@
 #include <iostream>
 #include <string>
 #include <fstream>
+#include <sstream>
 #include <stdio.h>
 #include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
+//#include <sys/socket.h>
+//#include <netinet/in.h>
 using namespace std;
 
 struct node {
@@ -25,27 +26,103 @@ struct node {
 };
 
 class weatherTable {
+private:
+	node* head;
 
-	private:
-		node* head;
-		node* rear;
+public:
+	weatherTable() {
+		head = nullptr;
+	}
 
-	printTable() {
+	void printTable() {
+		node* cu = head;
+		while (cu != nullptr) {
+			cout << cu->location << " " << cu->temperature << " " << cu->forecast << endl;
+			cu = cu->next;
+		}
+	}
 
+	void storeEntry(string place, int temp, string weather) {
+		node* entry = new node;
+		entry->location = place;
+		entry->temperature = temp;
+		entry->forecast = weather;
+		entry->next = nullptr;
+
+		if (head == nullptr) {
+			head = entry;
+		}
+
+		else {
+			node* cu = head;
+			while (cu->next != nullptr) {
+				cu = cu->next;
+			}
+
+			cu->location = place;
+			cu->temperature = temp;
+			cu->forecast = weather;
+			cu->next = nullptr;
+		}
 	}
 };
+
+void storeGraph(ifstream& file, string**& array, int lineCount) {
+	string line = "";
+	string field = "";
+
+	for (int i = 0; i < lineCount; i++) {
+
+		getline(file, line);
+		stringstream iss(line);
+
+		for (int j = 0; j < 3; j++) {
+			getline(iss, field, ',');
+			array[i][j] = field;
+		}
+	}
+}
+
+void showGraph(string** array, int rowSize, int colSize) {
+	for (int i = 0; i < rowSize; i++) {
+		for (int j = 0; j < colSize; j++) {
+			cout << array[i][j] << " ";
+		}
+		cout << endl;
+	}
+}
 
 int main(int argc, char *argv[]) {
 
 	string place;
 	int temp;
 	string weather;
+	string line;
+	int lineCount = 0;
+	int colSize = 3;
+	weatherTable table;
 
 	ifstream inFile;
 	inFile.open("weather20.txt");
-	while (inFile >> location >> temperature >> weather) {
 
+	while (getline(inFile, line)) {
+		lineCount++;
 	}
 
+	inFile.close();
+
+	string** array = new string*[lineCount];
+	for (int i = 0; i < lineCount; i++) {
+		array[i] = new string[colSize];
+	}
+
+	ifstream inFile2;
+	inFile2.open("weather20.txt");
+
+	storeGraph(inFile2, array, lineCount);
+	showGraph(array, lineCount, colSize);
+
+	//table.printTable();
+
 	return 0;
-} 
+}
