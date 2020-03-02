@@ -42,12 +42,13 @@ public:
 		}
 	}
 
-	void storeEntry(string place, int temp, string weather) {
+	void storeEntry(string**& array, int rowSize, int colSize) {
+
 		node* entry = new node;
-		entry->location = place;
-		entry->temperature = temp;
-		entry->forecast = weather;
 		entry->next = nullptr;
+		entry->location = "";
+		entry->forecast = "";
+		entry->temperature = 0;
 
 		if (head == nullptr) {
 			head = entry;
@@ -55,19 +56,32 @@ public:
 
 		else {
 			node* cu = head;
+
 			while (cu->next != nullptr) {
+				for (int i = 0; i < rowSize; i++) {
+					for (int j = 0; j < colSize; j++) {
+
+						if (j == 0) {
+							entry->location = array[i][j];
+						}
+
+						else if (j == 1) {
+							entry->temperature = stoi(array[i][j]);
+						}
+
+						else {
+							entry->forecast = array[i][j];
+						}
+					}
+				}
 				cu = cu->next;
 			}
-
-			cu->location = place;
-			cu->temperature = temp;
-			cu->forecast = weather;
-			cu->next = nullptr;
 		}
-	}
+
+	} 
 };
 
-void storeGraph(ifstream& file, string**& array, int lineCount) {
+void storeWeather(ifstream& file, string**& array, int lineCount) {
 	string line = "";
 	string field = "";
 
@@ -83,7 +97,7 @@ void storeGraph(ifstream& file, string**& array, int lineCount) {
 	}
 }
 
-void showGraph(string** array, int rowSize, int colSize) {
+void showTable(string** array, int rowSize, int colSize) {
 	for (int i = 0; i < rowSize; i++) {
 		for (int j = 0; j < colSize; j++) {
 			cout << array[i][j] << " ";
@@ -94,9 +108,6 @@ void showGraph(string** array, int rowSize, int colSize) {
 
 int main(int argc, char *argv[]) {
 
-	string place;
-	int temp;
-	string weather;
 	string line;
 	int lineCount = 0;
 	int colSize = 3;
@@ -119,10 +130,11 @@ int main(int argc, char *argv[]) {
 	ifstream inFile2;
 	inFile2.open("weather20.txt");
 
-	storeGraph(inFile2, array, lineCount);
-	showGraph(array, lineCount, colSize);
+	storeWeather(inFile2, array, lineCount);
+	//showTable(array, lineCount, colSize);
 
-	//table.printTable();
+	table.storeEntry(array, lineCount, colSize);
+	table.printTable();
 
 	return 0;
 }
