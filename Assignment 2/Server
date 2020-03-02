@@ -14,8 +14,8 @@
 #include <sstream>
 #include <stdio.h>
 #include <sys/types.h>
-//#include <sys/socket.h>
-//#include <netinet/in.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
 using namespace std;
 
 struct node {
@@ -28,10 +28,11 @@ struct node {
 class weatherTable {
 private:
 	node* head;
+	node* rear;
 
 public:
 	weatherTable() {
-		head = nullptr;
+		head = rear = nullptr;
 	}
 
 	void printTable() {
@@ -44,40 +45,35 @@ public:
 
 	void storeEntry(string**& array, int rowSize, int colSize) {
 
-		node* entry = new node;
-		entry->next = nullptr;
-		entry->location = "";
-		entry->forecast = "";
-		entry->temperature = 0;
+		for (int i = 0; i < rowSize; i++) {
 
-		if (head == nullptr) {
-			head = entry;
-		}
+			node* entry = new node;
+			entry->next = nullptr;
+			entry->location = "";
+			entry->temperature = 0;
+			entry->forecast = "";
 
-		else {
-			node* cu = head;
-
-			while (cu->next != nullptr) {
-				for (int i = 0; i < rowSize; i++) {
-					for (int j = 0; j < colSize; j++) {
-
-						if (j == 0) {
-							entry->location = array[i][j];
-						}
-
-						else if (j == 1) {
-							entry->temperature = stoi(array[i][j]);
-						}
-
-						else {
-							entry->forecast = array[i][j];
-						}
-					}
-				}
-				cu = cu->next;
+			if (head == nullptr) {
+				head = rear = entry;
 			}
-		}
 
+			for (int j = 0; j < colSize; j++) {
+
+				if (j == 0) {
+					rear->next = entry;
+					entry->location = array[i][j];
+					rear = entry;
+				}
+
+				else if (j == 1) {
+					entry->temperature = stoi(array[i][j]);
+				}
+
+				else {
+					entry->forecast = array[i][j];
+				}
+			}
+		}		
 	} 
 };
 
