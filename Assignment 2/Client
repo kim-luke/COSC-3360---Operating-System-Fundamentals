@@ -10,14 +10,60 @@
 
 #include <iostream>
 #include <string>
-#include <stdio.h>
+#include <string.h>
 #include <sys/types.h>
 #include <sys/socket.h>
-#include <netinet/in.h>
+#include <netdb.h>
+#include <arpa/inet.h>
+#include <unistd.h>
 using namespace std;
 
-int main(int argc, char *argv[]) {
+int main() {
 
-	
+	int sock = socket(AF_INET, SOCK_STREAM, 0);
+
+	if(sock == -1) {
+		return 1;
+	}
+
+	int port = 4706;
+	string ipAddress = "127.0.0.1";
+
+	sockaddr_in hint;
+	hint.sin_family = AF_INET;
+	hint.sin_port = htons(port);
+
+	// Converting string to a series of bytes which creates our hint structure
+	inet_pton(AF_INET, ipAddress.c_str(), &hint.sin_addr);
+
+	int connectRes = connect(sock, (sockaddr*)&hint, sizeof(hint));
+
+	if (connectRes == -1) {
+		return 1;
+	}
+
+	char buffer[4096];
+	string userInput;
+
+	do {
+		
+		cout << "> ";
+		getline(cin, userInput);
+
+		int sendResult = send(sock, userInput.c_str(), userInput.size() + 1, 0);
+		if (sendResult == -1) {
+			cout << "Could not send to server! Whoops!\r\n";
+			continue;
+		}
+
+		memset(buffer, 0, 4096);
+		int bytesReceived = recv(sock, buffer, 4096, 0);
+
+		cout << "SERVER> " << string(buffer, bytesReceived) << "\r\n";
+
+	} while(true);
+
+	close(sock);
+
 	return 0;
 } 
