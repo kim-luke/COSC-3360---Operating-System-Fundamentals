@@ -9,13 +9,15 @@
 */
 
 #include <iostream>
-#include <string>
-#include <fstream>
 #include <sstream>
-#include <stdio.h>
+#include <fstream>
+#include <string>
+#include <string.h>
 #include <sys/types.h>
 #include <sys/socket.h>
-#include <netinet/in.h>
+#include <netdb.h>
+#include <arpa/inet.h>
+#include <unistd.h>
 using namespace std;
 
 struct node {
@@ -43,6 +45,7 @@ public:
 		}
 	}
 
+	// Converts each row from the 2D array into one entry (node)
 	void storeEntry(string**& array, int rowSize, int colSize) {
 
 		for (int i = 0; i < rowSize; i++) {
@@ -77,6 +80,7 @@ public:
 	} 
 };
 
+// Stores line by line into a 2D array
 void storeWeather(ifstream& file, string**& array, int lineCount) {
 	string line = "";
 	string field = "";
@@ -102,9 +106,9 @@ void showTable(string** array, int rowSize, int colSize) {
 	}
 }
 
-int main(int argc, char *argv[]) {
+int main() {
 
-	string line;
+	/*string line;
 	int lineCount = 0;
 	int colSize = 3;
 	weatherTable table;
@@ -130,7 +134,81 @@ int main(int argc, char *argv[]) {
 	//showTable(array, lineCount, colSize);
 
 	table.storeEntry(array, lineCount, colSize);
-	table.printTable();
+	table.printTable(); */
+
+	int listening = socket(AF_INET, SOCK_STREAM, 0);
+	if (listening == -1) {
+		cerr << "Can't create a socket!" << endl;
+		return -1;
+	}
+
+	int port = 4706;
+	string ipAddress = "127.0.0.1";
+
+	sockaddr_in hint;
+	hint.sin_family = AF_INET;
+	hint.sin_port = htons(port);
+
+	inet_pton(AF_INET, ipAddress.c_str(), &hint.sin_addr);
+
+	if (bind(listening, (sockaddr*)&hint, sizeof(hint)) == -1) {
+		cerr << "Can't bind to IP/port" << endl;
+		return -2;
+	}
+
+	if (listen(listening, SOMAXCONN) == -1) {
+		cerr << "Can't listen" << endl;
+		return -3;
+	}
+
+	sockaddr_in client;
+	socklen_t clientSize = sizeof(client);
+	char host[NI_MAXHOST];
+	char svc[NI_MAXSERV];
+
+	int clientSocket = accept(listening, (sockaddr*)&client, &clientSize);
+
+	if (clientSocket == -1) {
+		cerr << "Problem with client connection" << endl;
+		return -4;
+	}
+
+	close(listening);
+
+	memset(host, 0, NI_MAXHOST);
+	memset(svc, 0, NI_MAXSERV);
+
+	int result = getnameinfo((sockaddr*)&client, sizeof(client), host, NI_MAXHOST, svc, NI_MAXSERV, 0);
+
+	if (result) {
+		cout << host << " connected on " << svc << endl; 
+	}
+
+	else {
+		inet_ntop(AF_INET, &client.sin_addr, host, NI_MAXHOST);
+		cout << host << " connected on " << ntohs(client.sin_port) << endl;
+	}
+
+	char buffer[4096];
+	while (true) {
+		memset(buffer, 0, 4096);
+		int bytesReceived = recv(clientSocket, buffer, 4096, 0);
+		if (bytesReceived == -1) {
+			cerr << "There was a connection issue" << endl;
+			break;
+		}
+
+		if (bytesReceived == 0) {
+			cout << "The client disconnected" << endl;
+			break;
+		}
+
+		cout << "Received: " << string(buffer, 0, bytesReceived) << endl;
+
+		send(clientSocket, buffer, bytesReceived + 1, 0);
+	}
+
+	close(clientSocket);
 
 	return 0;
 }
