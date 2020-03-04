@@ -141,8 +141,10 @@ int main() {
 		cerr << "Can't create a socket!" << endl;
 		return -1;
 	}
-
-	int port = 4706;
+	
+	int port;
+	cout << "Enter server port number: ";
+	cin >> port;
 	string ipAddress = "127.0.0.1";
 
 	sockaddr_in hint;
