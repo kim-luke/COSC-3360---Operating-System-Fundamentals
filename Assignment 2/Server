@@ -37,6 +37,10 @@ public:
 		head = rear = nullptr;
 	}
 
+	node* getHead() {
+		return head;
+	}
+
 	void printTable() {
 		node* cu = head;
 		while (cu != nullptr) {
@@ -185,21 +189,39 @@ int main() {
 	inet_ntop(AF_INET, &client.sin_addr, host, NI_MAXHOST);
 
 	char buffer[4096];
+
 	while (true) {
 		memset(buffer, 0, 4096);
 		int bytesReceived = recv(clientSocket, buffer, 4096, 0);
 		if (bytesReceived == -1) {
 			cerr << "There was a connection issue" << endl;
 			break;
-		}
+		} 
 
-		if (bytesReceived == 0) {
+		 if (bytesReceived == 0) {
 			cout << "The client disconnected" << endl;
 			break;
+		} 
+	
+		//cout << "Weather report for " << string(buffer, 0, bytesReceived) << endl;
+
+		if (buffer[0] != 0) {
+			node* cu = table.getHead();
+
+			while (cu->next != nullptr) {
+
+				if (cu->location == string(buffer)) {
+					cout << "Weather report for " << cu->location << endl;
+					break;
+				}
+				cu = cu->next;
+			}
+
+			if (cu->next == nullptr) {
+				cout << "No data" << endl;
+			}		
 		}
-
-		cout << "Weather report for " << string(buffer, 0, bytesReceived) << endl;
-
+		
 		send(clientSocket, buffer, bytesReceived + 1, 0);
 	}
 
