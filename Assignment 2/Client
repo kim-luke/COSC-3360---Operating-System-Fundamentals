@@ -22,10 +22,19 @@ int main() {
 
 	int port;
 	string serverName;
-	string ipAddress = "127.0.0.1";
+	string ipAddress = "";
 
 	cout << "Enter the server host name: ";
 	cin >> serverName;
+
+	if (serverName == "localhost") {
+		ipAddress = "127.0.0.1";
+	}
+
+	else {
+		cout << "A server name other than 'localhost' was entered." << endl;
+		return 0;
+	}
 
 	cout << "Enter the server port number: ";
 	cin >> port;
