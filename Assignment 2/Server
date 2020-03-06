@@ -138,7 +138,7 @@ int main() {
 	//showTable(array, lineCount, colSize);
 
 	table.storeEntry(array, lineCount, colSize);
-	//table.printTable();
+	table.printTable();
 
 	int listening = socket(AF_INET, SOCK_STREAM, 0);
 	if (listening == -1) {
@@ -212,6 +212,8 @@ int main() {
 
 				if (cu->location == string(buffer)) {
 					cout << "Weather report for " << cu->location << endl;
+					cout << "Tomorrow's maximum temperature is " << cu->temperature << " F" << endl;
+					cout << "Tomorrow's sky condition is " << cu->forecast << endl;
 					break;
 				}
 				cu = cu->next;
@@ -221,7 +223,7 @@ int main() {
 				cout << "No data" << endl;
 			}		
 		}
-		
+			
 		send(clientSocket, buffer, bytesReceived + 1, 0);
 	}
 
