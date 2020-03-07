@@ -219,9 +219,15 @@ int main() {
 				cu = cu->next;
 			}
 
-			if (cu->next == nullptr) {
+			if (cu->next == nullptr && string(buffer) == "Truth or Consequences") {
+				cout << "Weather report for " << cu->location << endl;
+				cout << "Tomorrow's maximum temperature is " << cu->temperature << " F" << endl;
+				cout << "Tomorrow's sky condition is " << cu->forecast << endl;
+			}
+
+			else {
 				cout << "No data" << endl;
-			}		
+			}
 		}
 			
 		send(clientSocket, buffer, bytesReceived + 1, 0);
