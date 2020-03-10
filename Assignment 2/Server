@@ -23,7 +23,7 @@ using namespace std;
 struct node {
 	node* next;
 	string location;
-	int temperature;
+	string temperature;
 	string forecast;
 };
 
@@ -57,7 +57,7 @@ public:
 			node* entry = new node;
 			entry->next = nullptr;
 			entry->location = "";
-			entry->temperature = 0;
+			entry->temperature = "0";
 			entry->forecast = "";
 
 			if (head == nullptr) {
@@ -73,7 +73,7 @@ public:
 				}
 
 				else if (j == 1) {
-					entry->temperature = stoi(array[i][j]);
+					entry->temperature = array[i][j];
 				}
 
 				else {
@@ -200,8 +200,7 @@ int main() {
 		} 
 
 		if (bytesReceived == 0) {
-			cout << "The client disconnected" << endl;
-			break;
+			continue;
 		} 
 	
 		if (buffer[0] != 0) {
@@ -213,6 +212,7 @@ int main() {
 					cout << "Weather report for " << cu->location << endl;
 					cout << "Tomorrow's maximum temperature is " << cu->temperature << " F" << endl;
 					cout << "Tomorrow's sky condition is " << cu->forecast << endl;
+
 					break;
 				}
 
@@ -223,13 +223,11 @@ int main() {
 				cout << "Weather report for " << cu->location << endl;
 				cout << "Tomorrow's maximum temperature is " << cu->temperature << " F" << endl;
 				cout << "Tomorrow's sky condition is " << cu->forecast << endl;
-				break;
 			}
 
 			else if (cu->next == nullptr && string(buffer) != "Truth or Consequences") {
 				cout << "Weather report for " << string(buffer) << endl;
 				cout << "No data" << endl;
-				break;
 			}
 		}
 			
