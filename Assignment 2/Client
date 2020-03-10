@@ -75,6 +75,15 @@ int main() {
 		memset(buffer, 0, 4096);
 		int bytesReceived = recv(sock, buffer, 4096, 0);
 
+		if (bytesReceived == -1) {
+			cout << "There was a connection issue" << endl;
+			break;
+		} 
+
+		//else {
+		//	cout << string(buffer, bytesReceived) << endl;
+		//}
+
 	} while(true);
 
 	close(sock);
