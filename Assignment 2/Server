@@ -6,6 +6,17 @@
 	This program will act as the server program, which will wait for requests
 	from the client program, and exchange one-line text messages to the
 	client program.
+
+	Sources Used:
+	https://stackoverflow.com/questions/662328/what-is-a-simple-c-or-c-tcp-server-and-client-example
+	https://simpledevcode.wordpress.com/2016/06/16/client-server-chat-in-c-using-sockets/
+	https://www.geeksforgeeks.org/socket-programming-cc/
+	http://www.linuxhowtos.org/C_C++/socket.htm
+	https://piazza.com/class_profile/get_resource/k4bjn3aw8qc2ov/k728q0r46xo4mg
+	https://www.bogotobogo.com/cplusplus/sockets_server_client.php
+	https://piazza.com/class_profile/get_resource/k4bjn3aw8qc2ov/k728tmpytds3ch
+	https://www.youtube.com/watch?v=WDn-htpBlnU
+	https://www.youtube.com/watch?v=0Zr_0Jy8mWE&t=6s
 */
 
 #include <iostream>
@@ -64,18 +75,22 @@ public:
 				head = rear = entry;
 			}
 
+			// Breaks down the lines into three columns
 			for (int j = 0; j < colSize; j++) {
 
+				// First column contains all locations
 				if (j == 0) {
 					rear->next = entry;
 					entry->location = array[i][j];
 					rear = entry;
 				}
 
+				// Second column contains all temperatures
 				else if (j == 1) {
 					entry->temperature = array[i][j];
 				}
 
+				// Third column contains the forecasts
 				else {
 					entry->forecast = array[i][j];
 				}
@@ -120,12 +135,14 @@ int main() {
 	ifstream inFile;
 	inFile.open("weather20.txt");
 
+	// Counts up the number of lines in file
 	while (getline(inFile, line)) {
 		lineCount++;
 	}
 
 	inFile.close();
 
+	// Create a 2D array that will store the file data
 	string** array = new string*[lineCount];
 	for (int i = 0; i < lineCount; i++) {
 		array[i] = new string[colSize];
@@ -172,27 +189,27 @@ int main() {
 	char host[NI_MAXHOST];
 	char svc[NI_MAXSERV];
 
-	int clientSocket = accept(listening, (sockaddr*)&client, &clientSize);
-
-	if (clientSocket == -1) {
-		cerr << "Problem with client connection" << endl;
-		return -4;
-	}
-
-	close(listening);
-
-	memset(host, 0, NI_MAXHOST);
-	memset(svc, 0, NI_MAXSERV);
-
-	int result = getnameinfo((sockaddr*)&client, sizeof(client), host, NI_MAXHOST, svc, NI_MAXSERV, 0);
-
-	inet_ntop(AF_INET, &client.sin_addr, host, NI_MAXHOST);
-
 	char buffer[4096];
+
+	// Will store the message to be sent
 	char messenger[4096];
 	string message = "";
 
 	while (true) {
+
+		int clientSocket = accept(listening, (sockaddr*)&client, &clientSize);
+
+		if (clientSocket == -1) {
+			cerr << "Problem with client connection" << endl;
+			return -4;
+		}
+
+		memset(host, 0, NI_MAXHOST);
+		memset(svc, 0, NI_MAXSERV);
+
+		int result = getnameinfo((sockaddr*)&client, sizeof(client), host, NI_MAXHOST, svc, NI_MAXSERV, 0);
+
+		inet_ntop(AF_INET, &client.sin_addr, host, NI_MAXHOST);
 		memset(buffer, 0, 4096);
 		int bytesReceived = recv(clientSocket, buffer, 4096, 0);
 
@@ -202,9 +219,11 @@ int main() {
 		} 
 
 		if (bytesReceived == 0) {
+			
 			continue;
 		} 
 	
+		// If buffer (message receieved) is NOT empty, then we know to start this sequence
 		if (buffer[0] != 0) {
 			node* cu = table.getHead();
 
@@ -246,9 +265,10 @@ int main() {
 		}
 			
 		send(clientSocket, messenger, message.length(), 0);
+		close(clientSocket);
 	}
 
-	close(clientSocket);
+	close(listening);
 
 	return 0;
 }
