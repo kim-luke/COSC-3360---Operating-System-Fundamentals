@@ -189,6 +189,8 @@ int main() {
 	inet_ntop(AF_INET, &client.sin_addr, host, NI_MAXHOST);
 
 	char buffer[4096];
+	char messenger[4096];
+	string message = "";
 
 	while (true) {
 		memset(buffer, 0, 4096);
@@ -213,6 +215,9 @@ int main() {
 					cout << "Tomorrow's maximum temperature is " << cu->temperature << " F" << endl;
 					cout << "Tomorrow's sky condition is " << cu->forecast << endl;
 
+					message = "Tomorrow's maximum temperature is " + cu->temperature + " F\n";
+					message += "Tomorrow's sky condition is " + cu->forecast + "\n";
+
 					break;
 				}
 
@@ -223,15 +228,24 @@ int main() {
 				cout << "Weather report for " << cu->location << endl;
 				cout << "Tomorrow's maximum temperature is " << cu->temperature << " F" << endl;
 				cout << "Tomorrow's sky condition is " << cu->forecast << endl;
+
+				message = "Tomorrow's maximum temperature is " + cu->temperature + " F\n";
+				message += "Tomorrow's sky condition is " + cu->forecast + "\n";
 			}
 
 			else if (cu->next == nullptr && string(buffer) != "Truth or Consequences") {
 				cout << "Weather report for " << string(buffer) << endl;
 				cout << "No data" << endl;
+
+				message = "No data\n";
 			}
 		}
+
+		for (int m = 0; m < message.length(); m++) {
+			messenger[m] = message[m];
+		}
 			
-		send(clientSocket, buffer, bytesReceived + 1, 0);
+		send(clientSocket, messenger, message.length(), 0);
 	}
 
 	close(clientSocket);
