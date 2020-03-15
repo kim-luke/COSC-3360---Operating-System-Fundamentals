@@ -6,6 +6,17 @@
 	This program will act as the client program, which will connect
 	to the server program and send requests for the weather report 
 	for a given city.
+
+	Sources Used:
+	https://stackoverflow.com/questions/662328/what-is-a-simple-c-or-c-tcp-server-and-client-example
+	https://simpledevcode.wordpress.com/2016/06/16/client-server-chat-in-c-using-sockets/
+	https://www.geeksforgeeks.org/socket-programming-cc/
+	http://www.linuxhowtos.org/C_C++/socket.htm
+	https://piazza.com/class_profile/get_resource/k4bjn3aw8qc2ov/k728q0r46xo4mg
+	https://www.bogotobogo.com/cplusplus/sockets_server_client.php
+	https://piazza.com/class_profile/get_resource/k4bjn3aw8qc2ov/k728tmpytds3ch
+	https://www.youtube.com/watch?v=WDn-htpBlnU
+	https://www.youtube.com/watch?v=0Zr_0Jy8mWE&t=6s
 */
 
 #include <iostream>
