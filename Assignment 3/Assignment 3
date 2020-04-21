@@ -1,1 +1,78 @@
+/*
+	Luke Kim - 1478875
+	COSC 3360: Fundamentals of Operating Systems – Assignment 3
+	Due: April 27, 2020 
 
+	This program will simulate a tunnel with a limit of how many cars may move through it,
+    and will also simulate the cars going north and south-bound through the tunnel. We will
+    use pthreads, pthread mutexes, and pthread condition variables to simulate this.
+*/
+
+#include <iostream>
+#include <fstream>
+#include <sstream>
+#include <string>
+#include <unistd.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <pthread.h>
+#include <string.h>
+#include <signal.h>
+#include <sys/types.h>
+using namespace std;
+
+#define MAXTHREADS 128
+
+static int maxCarsInTunnel;
+static int maxNCarsInTunnel;
+static int maxSCarsInTunnel;
+static int totalNCars;
+static int totalSCars;
+static int currentCarsInTunnel;
+static int currentNCarsInTunnel;
+static int currentSCarsInTunnel;
+static int numCarsWaiting;
+static pthread_mutex_t mute = PTHREAD_MUTEX_INITIALIZER;
+static pthread_cond_t cond = PTHREAD_COND_INITIALIZER; 
+
+void *northCar(void *arg);
+void *southCar(void *arg);
+
+int main() {
+
+    pthread_mutex_init(&mute, NULL);
+    pthread_t cartid[MAXTHREADS];
+    int storage = 0;
+
+    cin >> maxCarsInTunnel;
+    cin >> maxNCarsInTunnel;
+    cin >> maxSCarsInTunnel;
+
+    cout << "Maximum number of cars in the tunnel: " << maxCarsInTunnel << endl;
+    cout << "Maximum number of northbound cars: " << maxNCarsInTunnel << endl;
+    cout << "Maximum number of southbound cars: " << maxSCarsInTunnel << endl;
+
+    unsigned int arrival_time;
+    char direction;
+    unsigned int traversal_time;
+
+    while (cin >> arrival_time >> direction >> traversal_time) {
+        sleep(arrival_time);
+        if (direction == 'N') { 
+            pthread_create(&cartid[storage], NULL, northCar, (void *)&traversal_time);
+        }
+
+        else if (direction == 'S') {
+            pthread_create(&cartid[storage], NULL, southCar, (void *)&traversal_time);
+        }
+
+        storage++;
+    }
+
+    for (int i = 0; i < storage; i++) {
+        pthread_join(cartid[i], NULL);
+    }
+
+    return 0;
+}
