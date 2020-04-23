@@ -42,6 +42,7 @@ void *southCar(void *arg);
 struct car {
     int carNo;
     int travelTime;
+    bool waited;
 };
 
 int main() {
@@ -67,6 +68,7 @@ int main() {
         sleep(arrival_time);    
         
         argList.travelTime = traversal_time;
+        argList.waited = false;
 
         if (direction == 'N') { 
             totalNCars++;
@@ -97,17 +99,22 @@ int main() {
 void *northCar(void* arg) {
     int tunnelTime;
     int carNum;
+    bool wait;
     struct car *argptr;
     argptr = (struct car *) arg;
     tunnelTime = argptr->travelTime;
     carNum = argptr->carNo;
-    
+    wait = argptr->waited;
+
     pthread_mutex_lock(&lockAccess);
 
     cout << "Northbound car # " << carNum << " arrives at the tunnel." << endl;
     while (currentNCarsInTunnel >= maxNCarsInTunnel || currentCarsInTunnel >= maxCarsInTunnel) {
-        pthread_cond_wait(&cond, &lockAccess);
-        numCarsWaiting++;
+        if (wait == false) {
+            pthread_cond_wait(&cond, &lockAccess);
+            wait = true;
+            numCarsWaiting++;
+        }
     }
 
     currentNCarsInTunnel++;
@@ -132,17 +139,22 @@ void *northCar(void* arg) {
 void *southCar(void* arg) {
     int tunnelTime;
     int carNum;
+    bool wait;
     struct car *argptr;
     argptr = (struct car *) arg;
     tunnelTime = argptr->travelTime;
     carNum = argptr->carNo;
+    wait = argptr->waited;
 
     pthread_mutex_lock(&lockAccess);
 
     cout << "Southbound car # " << carNum << " arrives at the tunnel." << endl;
     while (currentSCarsInTunnel >= maxSCarsInTunnel || currentCarsInTunnel >= maxCarsInTunnel) {
-        pthread_cond_wait(&cond, &lockAccess);
-        numCarsWaiting++;
+        if (wait == false) {
+            pthread_cond_wait(&cond, &lockAccess);
+            wait = true;
+            numCarsWaiting++;
+        }
     }
 
     currentSCarsInTunnel++;
