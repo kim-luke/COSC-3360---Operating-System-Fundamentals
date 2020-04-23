@@ -33,15 +33,19 @@ static int currentCarsInTunnel;
 static int currentNCarsInTunnel;
 static int currentSCarsInTunnel;
 static int numCarsWaiting;
-static pthread_mutex_t mute = PTHREAD_MUTEX_INITIALIZER;
+static pthread_mutex_t lockAccess = PTHREAD_MUTEX_INITIALIZER;
 static pthread_cond_t cond = PTHREAD_COND_INITIALIZER; 
 
 void *northCar(void *arg);
 void *southCar(void *arg);
 
+struct car {
+    int carNo;
+    int travelTime;
+};
+
 int main() {
 
-    pthread_mutex_init(&mute, NULL);
     pthread_t cartid[MAXTHREADS];
     int storage = 0;
 
@@ -57,14 +61,23 @@ int main() {
     char direction;
     unsigned int traversal_time;
 
+    struct car argList;
+
     while (cin >> arrival_time >> direction >> traversal_time) {
-        sleep(arrival_time);
+        sleep(arrival_time);    
+        
+        argList.travelTime = traversal_time;
+
         if (direction == 'N') { 
-            pthread_create(&cartid[storage], NULL, northCar, (void *)&traversal_time);
+            totalNCars++;
+            argList.carNo = totalNCars;
+            pthread_create(&cartid[storage], NULL, northCar, (void *) &argList);
         }
 
         else if (direction == 'S') {
-            pthread_create(&cartid[storage], NULL, southCar, (void *)&traversal_time);
+            totalSCars++;
+            argList.carNo = totalSCars;
+            pthread_create(&cartid[storage], NULL, southCar, (void *) &argList);
         }
 
         storage++;
@@ -72,7 +85,81 @@ int main() {
 
     for (int i = 0; i < storage; i++) {
         pthread_join(cartid[i], NULL);
-    }
+    } 
+
+    cout << totalNCars << " northbound car(s) crossed the tunnel." << endl;
+    cout << totalSCars << " southbound car(s) crossed the tunnel." << endl;
+    cout << numCarsWaiting << " car(s) had to wait." << endl;
 
     return 0;
+}
+
+void *northCar(void* arg) {
+    int tunnelTime;
+    int carNum;
+    struct car *argptr;
+    argptr = (struct car *) arg;
+    tunnelTime = argptr->travelTime;
+    carNum = argptr->carNo;
+    
+    pthread_mutex_lock(&lockAccess);
+
+    cout << "Northbound car # " << carNum << " arrives at the tunnel." << endl;
+    while (currentNCarsInTunnel >= maxNCarsInTunnel || currentCarsInTunnel >= maxCarsInTunnel) {
+        pthread_cond_wait(&cond, &lockAccess);
+        numCarsWaiting++;
+    }
+
+    currentNCarsInTunnel++;
+    currentCarsInTunnel++;
+    cout << "Northbound car # " << carNum << " enters the tunnel." << endl;
+
+    pthread_cond_signal(&cond);
+    pthread_mutex_unlock(&lockAccess);
+
+    sleep(tunnelTime);  
+
+    pthread_mutex_lock(&lockAccess);
+    cout << "Northbound car # " << carNum << " exits the tunnel." << endl;
+
+    currentNCarsInTunnel--;
+    currentCarsInTunnel--;
+    
+    pthread_cond_broadcast(&cond);
+    pthread_mutex_unlock(&lockAccess); 
+}
+
+void *southCar(void* arg) {
+    int tunnelTime;
+    int carNum;
+    struct car *argptr;
+    argptr = (struct car *) arg;
+    tunnelTime = argptr->travelTime;
+    carNum = argptr->carNo;
+
+    pthread_mutex_lock(&lockAccess);
+
+    cout << "Southbound car # " << carNum << " arrives at the tunnel." << endl;
+    while (currentSCarsInTunnel >= maxSCarsInTunnel || currentCarsInTunnel >= maxCarsInTunnel) {
+        pthread_cond_wait(&cond, &lockAccess);
+        numCarsWaiting++;
+    }
+
+    currentSCarsInTunnel++;
+    currentCarsInTunnel++;
+    cout << "Southbound car # " << carNum << " enters the tunnel." << endl;
+
+    pthread_cond_signal(&cond);
+    pthread_mutex_unlock(&lockAccess);
+
+    sleep(tunnelTime);
+
+    pthread_mutex_lock(&lockAccess);
+    cout << "Southbound car # " << carNum << " exits the tunnel." << endl;
+
+    currentSCarsInTunnel--;
+    currentCarsInTunnel--;
+
+    pthread_cond_broadcast(&cond);
+    pthread_mutex_unlock(&lockAccess);
 }
