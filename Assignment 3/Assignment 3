@@ -110,13 +110,15 @@ void *northCar(void* arg) {
 
     cout << "Northbound car # " << carNum << " arrives at the tunnel." << endl;
     while (currentNCarsInTunnel >= maxNCarsInTunnel || currentCarsInTunnel >= maxCarsInTunnel) {
+
         if (wait == false) {
-            pthread_cond_wait(&cond, &lockAccess);
             wait = true;
             numCarsWaiting++;
         }
-    }
 
+        pthread_cond_wait(&cond, &lockAccess);
+    }
+    
     currentNCarsInTunnel++;
     currentCarsInTunnel++;
     cout << "Northbound car # " << carNum << " enters the tunnel." << endl;
@@ -150,11 +152,13 @@ void *southCar(void* arg) {
 
     cout << "Southbound car # " << carNum << " arrives at the tunnel." << endl;
     while (currentSCarsInTunnel >= maxSCarsInTunnel || currentCarsInTunnel >= maxCarsInTunnel) {
+
         if (wait == false) {
-            pthread_cond_wait(&cond, &lockAccess);
             wait = true;
             numCarsWaiting++;
         }
+
+        pthread_cond_wait(&cond, &lockAccess);
     }
 
     currentSCarsInTunnel++;
